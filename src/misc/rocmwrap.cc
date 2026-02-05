@@ -45,16 +45,22 @@ static int ncclCuMemSupported = 0;
 
 // Determine whether CUMEM & VMM RDMA is supported on this platform
 int ncclIsCuMemSupported() {
-#if defined(__HIP_PLATFORM_AMD__) || defined(__HIPCC__)
-  return 0;
-#else
   CUdevice currentDev;
   int cudaDev;
   int cudaDriverVersion;
   int flag = 0;
   ncclResult_t ret = ncclSuccess;
+#if defined(__HIP_PLATFORM_AMD__) || defined(__HIPCC__)
+  //https://rocmdocs.amd.com/projects/HIPIFY/en/latest/reference/tables/CUDA_Driver_API_functions_supported_by_HIP.html
+  // added in ROCM version 5.3.0
+  CUDACHECKGOTO(cudaDriverGetVersion(&cudaDriverVersion), ret, error);
+  printf("[ROCM Debug]: cudaDriverGetVersion: %lu\n",cudaDriverVersion)
+  if (cudaDriverVersion < 50300000) return 0;  
+  return 0;
+#else
   CUDACHECKGOTO(cudaDriverGetVersion(&cudaDriverVersion), ret, error);
   if (cudaDriverVersion < 12000) return 0;  // Need CUDA_VISIBLE_DEVICES support
+#endif
   CUDACHECKGOTO(cudaGetDevice(&cudaDev), ret, error);
   if (CUPFN(cuMemCreate) == NULL) return 0;
   CUCHECKGOTO(cuDeviceGet(&currentDev, cudaDev), ret, error);
@@ -64,17 +70,12 @@ int ncclIsCuMemSupported() {
 
 error:
   return (ret == ncclSuccess);
-#endif
 }
 
 int ncclCuMemEnable() {
-#if defined(__HIP_PLATFORM_AMD__) || defined(__HIPCC__)
-  return 0;
-#else
   // NCCL_CUMEM_ENABLE=-2 means auto-detect CUMEM support
   int param = ncclParamCuMemEnable();
   return  param >= 0 ? param : (param == -2 && ncclCuMemSupported);
-#endif
 }
 
 int ncclCuMemHostEnable() {
