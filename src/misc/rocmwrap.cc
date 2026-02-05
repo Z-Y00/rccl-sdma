@@ -54,7 +54,7 @@ int ncclIsCuMemSupported() {
   //https://rocmdocs.amd.com/projects/HIPIFY/en/latest/reference/tables/CUDA_Driver_API_functions_supported_by_HIP.html
   // added in ROCM version 5.3.0
   CUDACHECKGOTO(cudaDriverGetVersion(&cudaDriverVersion), ret, error);
-  printf("[ROCM Debug]: cudaDriverGetVersion: %lu\n",cudaDriverVersion);fflush(stdout);
+  printf("[SDMA Debug]: cudaDriverGetVersion: %lu\n",cudaDriverVersion);fflush(stdout);
   if (cudaDriverVersion < 50300000) return 0;  
   return 0;
 #else
