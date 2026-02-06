@@ -2999,7 +2999,13 @@ static ncclResult_t taskAppend(struct ncclComm* comm, struct ncclInfo* info) {
       bool ceImplemented = ncclCeImplemented(info->coll, info->op, info->datatype);
 
       // Append CE collective task if CE is supported and requested by user
+      printf("[SDMA Debug]: %d %d %p %p %d\n",comm->symmetricSupport,comm->nNodes, sendWin,recvWin, comm->config.CTAPolicy == NCCL_CTA_POLICY_ZERO,ceImplemented);fflush(stdout);
+      if(sendWin && recvWin){
+        printf("[SDMA Debug]: sendWin recvWin are not null, checking flag %d\n",(sendWin->winFlags & recvWin->winFlags & NCCL_WIN_COLL_SYMMETRIC));fflush(stdout);
+      }
+
       if (comm->symmetricSupport && comm->nNodes == 1 && sendWin && recvWin && (sendWin->winFlags & recvWin->winFlags & NCCL_WIN_COLL_SYMMETRIC) && comm->config.CTAPolicy == NCCL_CTA_POLICY_ZERO && ceImplemented) {
+        puts("[SDMA Debug] ceCollTaskAppend enter");
         NCCLCHECK(ceCollTaskAppend(comm, info, sendWin, recvWin, opDev));
       }
       // Append kernel-based collective

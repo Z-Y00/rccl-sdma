@@ -83,8 +83,13 @@ bool ncclCeImplemented(ncclFunc_t coll, int/*ncclDevRedOp_t*/ red, ncclDataType_
   int driverVersion;
   if (ncclCudaDriverVersion(&driverVersion) != ncclSuccess) return false;
 
+#if defined(__HIP_PLATFORM_AMD__) || defined(__HIPCC__)
+  // SDMA memcpy is supported in later than rocm 7, still working in progress
+  if (driverVersion >= 70000000) {
+#else
   // CE is supported in CUDA 12.5 and later
   if (driverVersion >= 12050) {
+#endif
     switch (coll) {
     case ncclFuncAllGather:
     case ncclFuncAlltoAll:
